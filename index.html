@@ -1,0 +1,143 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faculty TaskFlow</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">✓</div>
+        <div><strong>TaskFlow</strong><span>Faculty Workspace</span></div>
+      </div>
+
+      <nav>
+        <button class="nav-item active" data-page="dashboard">⌂ <span>Dashboard</span></button>
+        <button class="nav-item" data-page="tasks">▣ <span>Tasks</span></button>
+        <button class="nav-item" data-page="calendar">◷ <span>Calendar</span></button>
+        <button class="nav-item" data-page="reports">▤ <span>Reports</span></button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <button class="nav-item" id="notificationsBtn">🔔 <span>Notifications</span><b class="badge">3</b></button>
+        <button class="nav-item">⚙ <span>Settings</span></button>
+        <div class="user-mini">
+          <div class="avatar">AS</div>
+          <div><strong>Admin Staff</strong><small>HOD / Administrator</small></div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Faculty Task Assignment & Work Monitoring</p>
+          <h1 id="pageTitle">Good morning, Admin 👋</h1>
+        </div>
+        <div class="top-actions">
+          <button class="icon-btn" id="bellBtn">🔔<span></span></button>
+          <button class="profile-btn"><div class="avatar">AS</div> Admin Staff ▾</button>
+        </div>
+      </header>
+
+      <section id="dashboard" class="page active-page">
+        <div class="hero">
+          <div>
+            <span class="pill">Department overview</span>
+            <h2>Keep every task moving.</h2>
+            <p>Assign work, monitor progress, and catch approaching deadlines from one centralized dashboard.</p>
+          </div>
+          <button class="primary" id="openTaskModal">＋ Create New Task</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat-card"><div class="stat-icon purple">▣</div><span>Total Tasks</span><strong>24</strong><small>↑ 8% this month</small></div>
+          <div class="stat-card"><div class="stat-icon blue">◔</div><span>In Progress</span><strong>08</strong><small>Across 6 faculty members</small></div>
+          <div class="stat-card"><div class="stat-icon green">✓</div><span>Completed</span><strong>12</strong><small>50% completion rate</small></div>
+          <div class="stat-card"><div class="stat-icon red">!</div><span>Overdue</span><strong>04</strong><small>Needs attention</small></div>
+        </div>
+
+        <div class="grid-two">
+          <div class="panel">
+            <div class="panel-head"><div><h3>Priority Tasks</h3><p>Tasks requiring attention</p></div><button class="link-btn" data-page-link="tasks">View all →</button></div>
+            <div class="task-list">
+              <div class="task-row">
+                <div class="priority high"></div><div class="task-main"><strong>Submit NBA documentation</strong><span>Faculty A • Due 15 Sep</span></div>
+                <div class="progress"><div style="width:70%"></div></div><b>70%</b><span class="status in-progress">In Progress</span>
+              </div>
+              <div class="task-row">
+                <div class="priority high"></div><div class="task-main"><strong>Prepare departmental report</strong><span>Faculty B • Due 16 Sep</span></div>
+                <div class="progress"><div style="width:45%"></div></div><b>45%</b><span class="status assigned">Assigned</span>
+              </div>
+              <div class="task-row">
+                <div class="priority medium"></div><div class="task-main"><strong>Event documentation</strong><span>Faculty C • Due 18 Sep</span></div>
+                <div class="progress"><div style="width:85%"></div></div><b>85%</b><span class="status in-progress">In Progress</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><div><h3>Upcoming Deadlines</h3><p>Don't let these slip</p></div><span class="calendar-label">September 2026</span></div>
+            <div class="deadline"><div class="date-box"><b>15</b><small>SEP</small></div><div><strong>NBA documentation</strong><span>Faculty A • High priority</span></div><em>4 days</em></div>
+            <div class="deadline"><div class="date-box"><b>16</b><small>SEP</small></div><div><strong>Departmental report</strong><span>Faculty B • High priority</span></div><em>5 days</em></div>
+            <div class="deadline"><div class="date-box"><b>18</b><small>SEP</small></div><div><strong>Event documentation</strong><span>Faculty C • Medium priority</span></div><em>7 days</em></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div><h3>Faculty Workload</h3><p>Current task distribution</p></div><span class="muted">6 faculty members</span></div>
+          <div class="faculty-grid">
+            <div class="faculty"><div class="avatar">FA</div><div><strong>Faculty A</strong><span>5 tasks</span></div><div class="mini-progress"><i style="width:70%"></i></div><b>70%</b></div>
+            <div class="faculty"><div class="avatar">FB</div><div><strong>Faculty B</strong><span>4 tasks</span></div><div class="mini-progress"><i style="width:45%"></i></div><b>45%</b></div>
+            <div class="faculty"><div class="avatar">FC</div><div><strong>Faculty C</strong><span>6 tasks</span></div><div class="mini-progress"><i style="width:85%"></i></div><b>85%</b></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tasks" class="page">
+        <div class="section-head"><div><h2>Task Management</h2><p>Create, assign and monitor faculty tasks.</p></div><button class="primary" id="openTaskModal2">＋ Create Task</button></div>
+        <div class="filters"><input id="searchInput" placeholder="🔎 Search tasks..."><select id="statusFilter"><option>All Status</option><option>Assigned</option><option>In Progress</option><option>Completed</option><option>Overdue</option></select><select><option>All Priorities</option><option>High</option><option>Medium</option><option>Low</option></select></div>
+        <div class="panel table-panel">
+          <table><thead><tr><th>Task</th><th>Assigned To</th><th>Priority</th><th>Deadline</th><th>Progress</th><th>Status</th></tr></thead>
+          <tbody id="taskTable">
+            <tr><td><strong>Submit NBA documentation</strong><small>Accreditation work</small></td><td>Faculty A</td><td><span class="priority-tag high-tag">High</span></td><td>15 Sep 2026</td><td>70%</td><td><span class="status in-progress">In Progress</span></td></tr>
+            <tr><td><strong>Prepare departmental report</strong><small>Administrative</small></td><td>Faculty B</td><td><span class="priority-tag high-tag">High</span></td><td>16 Sep 2026</td><td>45%</td><td><span class="status assigned">Assigned</span></td></tr>
+            <tr><td><strong>Event documentation</strong><small>Department event</small></td><td>Faculty C</td><td><span class="priority-tag medium-tag">Medium</span></td><td>18 Sep 2026</td><td>85%</td><td><span class="status in-progress">In Progress</span></td></tr>
+            <tr><td><strong>Update academic records</strong><small>Academic records</small></td><td>Faculty A</td><td><span class="priority-tag low-tag">Low</span></td><td>10 Sep 2026</td><td>100%</td><td><span class="status completed">Completed</span></td></tr>
+          </tbody></table>
+        </div>
+      </section>
+
+      <section id="calendar" class="page">
+        <div class="section-head"><div><h2>Deadline Calendar</h2><p>Upcoming task deadlines at a glance.</p></div></div>
+        <div class="calendar panel"><div class="calendar-top"><button>‹</button><h3>September 2026</h3><button>›</button></div><div class="week"><b>MON</b><b>TUE</b><b>WED</b><b>THU</b><b>FRI</b><b>SAT</b><b>SUN</b></div><div class="days" id="calendarDays"></div></div>
+      </section>
+
+      <section id="reports" class="page">
+        <div class="section-head"><div><h2>Reports & Monitoring</h2><p>Quick view of departmental task performance.</p></div><button class="secondary">↓ Export Report</button></div>
+        <div class="report-grid"><div class="report-card"><span>Completion Rate</span><strong>50%</strong><div class="big-progress"><i style="width:50%"></i></div></div><div class="report-card"><span>On-time Tasks</span><strong>83%</strong><div class="big-progress"><i style="width:83%"></i></div></div><div class="report-card"><span>Overdue Tasks</span><strong>4</strong><p>Require immediate attention</p></div></div>
+        <div class="panel"><h3>Task Status Workflow</h3><div class="workflow"><span>Assigned</span><i>→</i><span>Acknowledged</span><i>→</i><span>In Progress</span><i>→</i><span>Submitted</span><i>→</i><span>Verified</span><i>→</i><span>Completed</span></div><div class="overdue-flow"><span>Deadline Passed</span><b>→ Overdue</b></div></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="taskModal">
+    <div class="modal-box">
+      <button class="close" id="closeModal">×</button>
+      <h2>Create New Task</h2><p>Assign a task and define its deadline and priority.</p>
+      <form id="taskForm">
+        <label>Task Title<input required placeholder="e.g. Prepare departmental report"></label>
+        <label>Description<textarea placeholder="Add task instructions..."></textarea></label>
+        <div class="form-grid"><label>Assigned To<select><option>Faculty A</option><option>Faculty B</option><option>Faculty C</option></select></label><label>Priority<select><option>High</option><option>Medium</option><option>Low</option></select></label></div>
+        <div class="form-grid"><label>Deadline<input type="date" required></label><label>Attachment<input type="file"></label></div>
+        <button class="primary full">Create Task</button>
+      </form>
+    </div>
+  </div>
+  <div class="toast" id="toast">Task created successfully ✓</div>
+</body>
+</html>
