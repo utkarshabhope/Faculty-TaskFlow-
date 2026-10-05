@@ -813,3 +813,16 @@ form input, form textarea, form select {
   z-index: 999;
 }
 .toast.show { display: block; }
+
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  margin: 1px;
+}
+.tag-accreditation { background-color: #8b5cf6; } /* Purple */
+.tag-academic { background-color: #3b82f6; }      /* Blue */
+.tag-admin { background-color: #f59e0b; }         /* Amber/Orange */
+.tag-event { background-color: #10b981; }         /* Green */
