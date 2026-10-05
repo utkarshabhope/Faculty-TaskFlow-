@@ -5,7 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Faculty TaskFlow - Bharati Vidyapeeth's College of Engineering for Women, Pune</title>
   <link rel="stylesheet" href="style.css">
-  <script defer src="script.js"></script>
+  <script type="module" src="script.js"></script>
+<style>
+.login-wrapper{background:radial-gradient(circle at 15% 20%,rgba(124,58,237,.18),transparent 32%),radial-gradient(circle at 85% 80%,rgba(37,99,235,.18),transparent 34%),linear-gradient(135deg,#f8fafc 0%,#eef2ff 48%,#e0f2fe 100%);position:relative;overflow:hidden}
+.login-wrapper:before,.login-wrapper:after{content:"";position:absolute;border-radius:50%;pointer-events:none}
+.login-wrapper:before{width:360px;height:360px;background:rgba(99,102,241,.10);top:-130px;right:-90px}
+.login-wrapper:after{width:300px;height:300px;background:rgba(14,165,233,.10);bottom:-120px;left:-80px}
+.login-card{position:relative;z-index:1;backdrop-filter:blur(8px)}
+.workspace-badge{color:#475569;font-size:13px;font-weight:600}.message-item{padding:12px 0;border-bottom:1px solid #e2e8f0}.message-item:last-child{border-bottom:0}.message-meta{color:#64748b;font-size:12px;margin-bottom:5px}.attachment-link{display:inline-block;margin-top:7px;font-size:12px;font-weight:600}
+</style>
 </head>
 <body>
 
@@ -22,7 +30,7 @@
       <form id="loginForm">
         <div class="form-group">
           <label for="loginUsername">Faculty ID / Username</label>
-          <input type="text" id="loginUsername" placeholder="e.g. hod or priyanka" required autocomplete="username">
+          <input type="text" id="loginUsername" placeholder="e.g. hod, priyanka, neha" required autocomplete="username">
         </div>
 
         <div class="form-group">
@@ -38,7 +46,7 @@
         <small><strong>Demo Login Credentials:</strong></small>
         <ul>
           <li><strong>HOD:</strong> <code>hod</code> | Password: <code>hod123</code></li>
-          <li><strong>Staff (Priyanka, Pallavi, Ashwini, Kamlesh, Seema):</strong> ID: <code>priyanka</code>, <code>pallavi</code>, etc. | Password: <code>staff123</code></li>
+          <li><strong>Staff (Priyanka, Pallavi, Ashwini, Kamlesh, Seema, Neha):</strong> ID: <code>priyanka</code>, <code>neha</code>, etc. | Password: <code>staff123</code></li>
         </ul>
       </div>
     </div>
@@ -60,9 +68,9 @@
         <button class="nav-item active" data-page="dashboard">⌂ <span>Dashboard</span></button>
         <button class="nav-item" data-page="tasks">▣ <span>Tasks</span></button>
         <button class="nav-item" data-page="calendar">◷ <span>Department Calendar</span></button>
-        <!-- Reports button: strictly visible to HOD -->
         <button class="nav-item hod-only" data-page="reports">▤ <span>Workload & Reports</span></button>
-        <button class="nav-item" data-page="research">🕮 <span>WAM Framework</span></button>
+        <button class="nav-item" data-page="messages">✉ <span>Messaging</span></button>
+        <button class="nav-item" data-page="about">ⓘ <span>About Us</span></button>
       </nav>
 
       <div class="sidebar-bottom">
@@ -85,13 +93,12 @@
           <h1 id="pageTitle">Welcome 👋</h1>
         </div>
         <div class="top-actions">
-          <button class="primary" id="openTaskModal">+ Create Task</button>
+          <span class="workspace-badge">Faculty TaskFlow • IT Department</span>
         </div>
       </header>
 
       <!-- Dashboard View -->
       <section id="dashboard" class="page active-page">
-        <!-- Big Focus Box -->
         <div class="focus-task-box" id="heroTaskCard">
           <div class="focus-badge">CURRENT FOCUS TASK</div>
           <div class="focus-content">
@@ -115,7 +122,6 @@
           </div>
         </div>
 
-        <!-- Metric Statistics -->
         <div class="stats">
           <div class="stat-card">
             <div class="stat-icon purple">▣</div>
@@ -162,16 +168,7 @@
                 <p>BVCOEW Pune Schedule</p>
               </div>
             </div>
-            <div class="deadline-list">
-              <div class="deadline">
-                <div class="date-box"><b>24</b><small>SEP</small></div>
-                <div><strong>Mid-Semester Question Paper Moderation</strong><span>Exam Committee</span></div>
-              </div>
-              <div class="deadline">
-                <div class="date-box"><b>30</b><small>SEP</small></div>
-                <div><strong>Department Faculty Council Meeting</strong><span>Chaired by HOD</span></div>
-              </div>
-            </div>
+            <div class="deadline-list" id="milestoneList"></div>
           </div>
         </div>
       </section>
@@ -183,7 +180,6 @@
             <h2>Tasks & Submissions</h2>
             <p id="taskSectionSubtitle">View your deliverables, update completion, or track status.</p>
           </div>
-          <button class="primary" id="openTaskModal2">+ Create Task</button>
         </div>
 
         <div class="filters">
@@ -221,34 +217,29 @@
         </div>
       </section>
 
-      <!-- Department Calendar (Set by HOD with Month Navigation) -->
+      <!-- Asana-Style Department Calendar -->
       <section id="calendar" class="page">
-        <div class="section-head">
+        <div class="section-head" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px;">
           <div>
-            <h2>Department Academic & Task Calendar (Set by HOD)</h2>
-            <p>Official schedule set by Dr. Nilofar Mulla. Shows public events and your individual tasks.</p>
+            <h2>Department Calendar</h2>
+            <p>Academic events and individual faculty deadlines.</p>
           </div>
-          <div class="calendar-legend">
-            <span class="legend-item"><span class="dot tag-accreditation"></span> Accreditation</span>
-            <span class="legend-item"><span class="dot tag-academic"></span> Academic / Exams</span>
-            <span class="legend-item"><span class="dot tag-admin"></span> Administrative</span>
-            <span class="legend-item"><span class="dot tag-event"></span> HOD Public Event</span>
+          
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="calTodayBtn" class="secondary" style="padding: 6px 12px; font-size: 13px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer;">Today</button>
+            <div style="display: flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+              <button id="prevMonthBtn" style="border: none; background: #fff; padding: 6px 12px; cursor: pointer; border-right: 1px solid #cbd5e1;">‹</button>
+              <button id="nextMonthBtn" style="border: none; background: #fff; padding: 6px 12px; cursor: pointer;">›</button>
+            </div>
+            <h3 id="currentMonthYear" style="margin: 0 0 0 8px; font-size: 16px; font-weight: 700; color: #1e293b; min-width: 140px;"></h3>
           </div>
         </div>
 
-        <div class="calendar panel">
-          <div class="calendar-top">
-            <button id="prevMonthBtn" title="Previous Month">‹</button>
-            <h3 id="currentMonthYear">September 2026</h3>
-            <button id="nextMonthBtn" title="Next Month">›</button>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <div style="display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid #e2e8f0; background: #f8fafc; text-align: center; font-size: 12px; font-weight: 600; color: #64748b; padding: 10px 0;">
+            <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
           </div>
-          <div class="week">
-            <b>SUN</b><b>MON</b><b>TUE</b><b>WED</b><b>THU</b><b>FRI</b><b>SAT</b>
-          </div>
-          <div class="days calendar-grid" id="calendarDays"></div>
-          <div class="calendar-details" id="calendarDayDetails">
-            <h4>Select any date to view scheduled tasks, meetings, and faculty responsibilities.</h4>
-          </div>
+          <div id="calendarDays" style="display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(105px, 1fr); background: #e2e8f0; gap: 1px;"></div>
         </div>
       </section>
 
@@ -256,10 +247,9 @@
       <section id="reports" class="page">
         <div class="section-head">
           <div>
-            <h2>Faculty Workload Analysis (WAM Model)</h2>
-            <p>Confidential institutional workload balance — accessible only to Dr. Nilofar Mulla (HOD).</p>
+            <h2>Faculty Workload Analysis</h2>
+            <p>Departmental workload balance — accessible only to Dr. Nilofar Mulla (HOD).</p>
           </div>
-          <button class="secondary" id="exportReportBtn">↓ Export Excel (CSV) Report</button>
         </div>
 
         <div class="report-grid">
@@ -286,31 +276,53 @@
         </div>
       </section>
 
-      <!-- Theoretical Framework Section -->
-      <section id="research" class="page">
+      <!-- Messaging Section -->
+      <section id="messages" class="page">
         <div class="section-head">
           <div>
-            <h2>Theoretical Framework: Workload Allocation Model (WAM)</h2>
-            <p>Department task transparency and compliance monitoring.</p>
+            <h2>Department Messaging</h2>
+            <p>Send quick departmental messages to a specific faculty member or the whole department.</p>
+          </div>
+        </div>
+        <div class="grid-two">
+          <div class="panel">
+            <h3>New Message</h3>
+            <form id="messageForm">
+              <label>Recipient<select id="messageRecipient"></select></label>
+              <label>Message<textarea id="messageText" rows="5" required placeholder="Write your departmental message..."></textarea></label>
+              <button type="submit" class="primary">Send Message</button>
+            </form>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h3>Inbox</h3><p>Messages visible to your account</p></div></div>
+            <div id="messageList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- About Us Section -->
+      <section id="about" class="page">
+        <div class="section-head">
+          <div>
+            <h2>About Faculty TaskFlow</h2>
+            <p>Digital task coordination for the Department of Information Technology.</p>
           </div>
         </div>
         <div class="panel research-box">
-          <h3>Problem Identification & Research Grounding</h3>
-          <p>
-            Academic institutions face chronic inefficiencies due to decentralized communication and lack of auditability.
-            Implementing a transparent Workload Allocation Model (Hull, 2006) resolves:
-          </p>
-          <ul class="research-list">
-            <li><strong>Central Authority & Clear Assignment:</strong> The HOD defines milestones and delegates tasks with objective deadlines.</li>
-            <li><strong>Staff Self-Management:</strong> Individual faculty can create and track self-assigned academic deliverables.</li>
-            <li><strong>Accreditation Readiness:</strong> Continuous compliance data for NBA Criterion 5 and NAAC Criteria 2.</li>
-          </ul>
+          <h3>Bharati Vidyapeeth's College of Engineering for Women, Pune</h3>
+          <p>Faculty TaskFlow is a departmental workspace concept for organising academic, accreditation and administrative responsibilities in one place.</p>
+          <div class="stats">
+            <div class="stat-card"><span>Task Allocation</span><strong>Centralised</strong><small>HOD-controlled ownership</small></div>
+            <div class="stat-card"><span>Workload</span><strong>Visible</strong><small>Department-level monitoring</small></div>
+            <div class="stat-card"><span>Communication</span><strong>Built In</strong><small>Department messaging</small></div>
+            <div class="stat-card"><span>Storage</span><strong>Cloud Synchronized</strong><small>Firebase Firestore & Auth</small></div>
+          </div>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- Task Creation Modal (Shared by HOD and Staff with smart permission locking) -->
+  <!-- Task Creation Modal -->
   <div class="modal" id="taskModal">
     <div class="modal-box">
       <button class="close" id="closeModal">×</button>
@@ -335,6 +347,7 @@
               <option value="ashwini">Prof. Ashwini Kanade</option>
               <option value="kamlesh">Prof. Kamlesh Patil</option>
               <option value="seema">Prof. Seema Hadke</option>
+              <option value="neha">Prof. Neha Bhosale</option>
             </select>
           </label>
           <label>
@@ -360,13 +373,11 @@
             </select>
           </label>
         </div>
-        <div class="form-group" id="publicCheckboxContainer" style="margin-top: 5px;">
-          <label style="flex-direction: row; align-items: center; gap: 8px; cursor: pointer;">
-            <input type="checkbox" id="taskIsPublicCheckbox" style="width: auto;">
-            <span>Make this task Public on Department Calendar (Visible to everyone)</span>
-          </label>
+        <div class="form-group">
+          <label for="taskFileInput">Task File (optional)</label>
+          <input type="file" id="taskFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg">
         </div>
-        <button type="submit" class="primary full-width" id="submitTaskBtn">Save & Assign Task</button>
+        <button type="submit" class="primary full-width" id="submitTaskBtn">Save Task</button>
       </form>
     </div>
   </div>
