@@ -6,14 +6,64 @@
   <title>Faculty TaskFlow - Bharati Vidyapeeth's College of Engineering for Women, Pune</title>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="script.js"></script>
-<style>
-.login-wrapper{background:radial-gradient(circle at 15% 20%,rgba(124,58,237,.18),transparent 32%),radial-gradient(circle at 85% 80%,rgba(37,99,235,.18),transparent 34%),linear-gradient(135deg,#f8fafc 0%,#eef2ff 48%,#e0f2fe 100%);position:relative;overflow:hidden}
-.login-wrapper:before,.login-wrapper:after{content:"";position:absolute;border-radius:50%;pointer-events:none}
-.login-wrapper:before{width:360px;height:360px;background:rgba(99,102,241,.10);top:-130px;right:-90px}
-.login-wrapper:after{width:300px;height:300px;background:rgba(14,165,233,.10);bottom:-120px;left:-80px}
-.login-card{position:relative;z-index:1;backdrop-filter:blur(8px)}
-.workspace-badge{color:#475569;font-size:13px;font-weight:600}.message-item{padding:12px 0;border-bottom:1px solid #e2e8f0}.message-item:last-child{border-bottom:0}.message-meta{color:#64748b;font-size:12px;margin-bottom:5px}.attachment-link{display:inline-block;margin-top:7px;font-size:12px;font-weight:600}
-</style>
+  <style>
+    .login-wrapper {
+      background: radial-gradient(circle at 15% 20%, rgba(124, 58, 237, .18), transparent 32%),
+                  radial-gradient(circle at 85% 80%, rgba(37, 99, 235, .18), transparent 34%),
+                  linear-gradient(135deg, #f8fafc 0%, #eef2ff 48%, #e0f2fe 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .login-wrapper:before, .login-wrapper:after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .login-wrapper:before {
+      width: 360px;
+      height: 360px;
+      background: rgba(99, 102, 241, .10);
+      top: -130px;
+      right: -90px;
+    }
+    .login-wrapper:after {
+      width: 300px;
+      height: 300px;
+      background: rgba(14, 165, 233, .10);
+      bottom: -120px;
+      left: -80px;
+    }
+    .login-card {
+      position: relative;
+      z-index: 1;
+      backdrop-filter: blur(8px);
+    }
+    .workspace-badge {
+      color: #475569;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .message-item {
+      padding: 12px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .message-item:last-child {
+      border-bottom: 0;
+    }
+    .message-meta {
+      color: #64748b;
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+    .workload-item {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
 
@@ -46,7 +96,7 @@
         <small><strong>Demo Login Credentials:</strong></small>
         <ul>
           <li><strong>HOD:</strong> <code>hod</code> | Password: <code>hod123</code></li>
-          <li><strong>Staff (Priyanka, Pallavi, Ashwini, Kamlesh, Seema, Neha):</strong> ID: <code>priyanka</code>, <code>neha</code>, etc. | Password: <code>staff123</code></li>
+          <li><strong>Staff:</strong> ID: <code>priyanka</code>, <code>neha</code>, etc. | Password: <code>staff123</code></li>
         </ul>
       </div>
     </div>
@@ -217,14 +267,13 @@
         </div>
       </section>
 
-      <!-- Asana-Style Department Calendar -->
+      <!-- Calendar View -->
       <section id="calendar" class="page">
         <div class="section-head" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px;">
           <div>
             <h2>Department Calendar</h2>
             <p>Academic events and individual faculty deadlines.</p>
           </div>
-          
           <div style="display: flex; align-items: center; gap: 8px;">
             <button id="calTodayBtn" class="secondary" style="padding: 6px 12px; font-size: 13px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer;">Today</button>
             <div style="display: flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
@@ -243,18 +292,18 @@
         </div>
       </section>
 
-      <!-- Workload & Reports (Strictly HOD Only) -->
+      <!-- Workload & Reports (HOD Only) -->
       <section id="reports" class="page">
         <div class="section-head">
           <div>
             <h2>Faculty Workload Analysis</h2>
-            <p>Departmental workload balance — accessible only to Dr. Nilofar Mulla (HOD).</p>
+            <p>Departmental assigned task workload balance (excluding private tasks).</p>
           </div>
         </div>
 
         <div class="report-grid">
           <div class="report-card">
-            <span>Overall Task Completion</span>
+            <span>Overall Assigned Completion</span>
             <strong id="reportCompletionRate">0%</strong>
             <div class="big-progress"><i id="reportProgressBar" style="width: 0%"></i></div>
           </div>
@@ -264,14 +313,20 @@
             <small>NBA/NAAC statutory tasks verified</small>
           </div>
           <div class="report-card">
-            <span>Workload Equity Index</span>
-            <strong>Equitable (&lt;12%)</strong>
-            <small>Calculated across department</small>
+            <span>Total Assigned Tasks</span>
+            <strong id="reportTotalTasks">0</strong>
+            <small>Departmental deliverables</small>
           </div>
         </div>
 
-        <div class="panel workload-panel">
-          <h3>Workload Distribution by Faculty</h3>
+        <div class="panel workload-panel" style="margin-top: 20px;">
+          <div class="panel-head" style="margin-bottom: 16px;">
+            <div>
+              <h3>Workload Distribution by Faculty</h3>
+              <p>Official assigned task completion per faculty member</p>
+            </div>
+            <button class="secondary" id="refreshWorkloadBtn" style="padding: 5px 12px; font-size: 12px;">↻ Refresh</button>
+          </div>
           <div id="facultyWorkloadBars"></div>
         </div>
       </section>
@@ -281,20 +336,37 @@
         <div class="section-head">
           <div>
             <h2>Department Messaging</h2>
-            <p>Send quick departmental messages to a specific faculty member or the whole department.</p>
+            <p>Share circulars, announcements, and direct messages.</p>
           </div>
         </div>
         <div class="grid-two">
           <div class="panel">
             <h3>New Message</h3>
             <form id="messageForm">
-              <label>Recipient<select id="messageRecipient"></select></label>
-              <label>Message<textarea id="messageText" rows="5" required placeholder="Write your departmental message..."></textarea></label>
-              <button type="submit" class="primary">Send Message</button>
+              <label>Recipient
+                <select id="messageRecipient"></select>
+              </label>
+              <label>Message Content
+                <textarea id="messageText" rows="5" required placeholder="Write your message or circular details..."></textarea>
+              </label>
+              <button type="submit" class="primary full-width" id="sendMessageBtn" style="margin-top: 10px;">Send Message</button>
             </form>
           </div>
           <div class="panel">
-            <div class="panel-head"><div><h3>Inbox</h3><p>Messages visible to your account</p></div></div>
+            <div class="panel-head" style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <h3>Inbox</h3>
+                <p>Messages visible to your account</p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-size: 12px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: #475569;">
+                  <input type="checkbox" id="selectAllMessages"> Select All
+                </label>
+                <button id="deleteSelectedMessagesBtn" class="secondary" style="padding: 4px 10px; font-size: 12px; color: #dc2626; border: 1px solid #fca5a5; background: #fff; border-radius: 4px; cursor: pointer;">
+                  🗑 Delete Selected
+                </button>
+              </div>
+            </div>
             <div id="messageList"></div>
           </div>
         </div>
@@ -335,20 +407,12 @@
         </label>
         <label>
           Description & Guidelines
-          <textarea id="taskDescInput" rows="3" placeholder="Add specific instructions, required files, or criteria..."></textarea>
+          <textarea id="taskDescInput" rows="3" placeholder="Add specific instructions or criteria..."></textarea>
         </label>
         <div class="form-grid">
           <label id="facultyFieldContainer">
             Assigned Faculty
-            <select id="taskFacultySelect">
-              <option value="hod">Dr. Nilofar Mulla (HOD / Self)</option>
-              <option value="priyanka">Prof. Priyanka Raikar</option>
-              <option value="pallavi">Prof. Pallavi Narkhede</option>
-              <option value="ashwini">Prof. Ashwini Kanade</option>
-              <option value="kamlesh">Prof. Kamlesh Patil</option>
-              <option value="seema">Prof. Seema Hadke</option>
-              <option value="neha">Prof. Neha Bhosale</option>
-            </select>
+            <select id="taskFacultySelect"></select>
           </label>
           <label>
             Priority
@@ -372,10 +436,6 @@
               <option value="Administrative">Administrative / Committee</option>
             </select>
           </label>
-        </div>
-        <div class="form-group">
-          <label for="taskFileInput">Task File (optional)</label>
-          <input type="file" id="taskFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg">
         </div>
         <button type="submit" class="primary full-width" id="submitTaskBtn">Save Task</button>
       </form>
