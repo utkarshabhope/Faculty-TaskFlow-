@@ -14,18 +14,13 @@ import {
   addDoc,
   deleteDoc,
   updateDoc,
+  arrayUnion,
   onSnapshot,
   query,
   orderBy,
   serverTimestamp,
   doc
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-storage.js";
 
 // ============================================================
 // 2. FIREBASE CONFIGURATION
@@ -43,7 +38,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 const EMAIL_DOMAIN = "@bvcoew.edu";
 
@@ -142,6 +136,12 @@ function switchPage(pageKey) {
 
   if (pageKey === "calendar") {
     renderCalendar();
+  } else if (pageKey === "reports") {
+    renderReports();
+  } else if (pageKey === "dashboard") {
+    renderDashboardStats();
+    renderFocusCard();
+    renderDashboardTasks();
   }
 
   const pageTitle = document.getElementById("pageTitle");
@@ -244,6 +244,7 @@ function subscribeToData() {
       allTasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       renderAllTaskViews();
       renderCalendar();
+      renderReports();
     }, (err) => console.error("Tasks sync error:", err));
 
     const messagesQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"));
@@ -272,6 +273,7 @@ function getScopedTasks() {
 function renderAllTaskViews() {
   renderDashboardStats();
   renderFocusCard();
+  renderDashboardTasks();
   renderTaskTable();
   renderReports();
 }
@@ -293,6 +295,32 @@ function renderDashboardStats() {
   if (inProgEl) inProgEl.textContent = inProg;
   if (completedEl) completedEl.textContent = completed;
   if (overdueEl) overdueEl.textContent = overdue;
+}
+
+function renderDashboardTasks() {
+  const container = document.getElementById("dashboardTaskList");
+  if (!container) return;
+
+  const scoped = getScopedTasks().slice(0, 5);
+
+  if (scoped.length === 0) {
+    container.innerHTML = `<p style="padding:15px;color:#64748b;font-size:13px;text-align:center;">No recent deliverables found.</p>`;
+    return;
+  }
+
+  container.innerHTML = scoped.map(t => `
+    <div class="message-item" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div class="message-meta">${escapeHtml(t.category)} • Due: ${t.deadline || "No date"}</div>
+        <strong>${t.isPrivate ? "🔒 " : ""}${escapeHtml(t.title)}</strong>
+        <small style="display:block;color:#64748b;">${escapeHtml(userDirectory[t.assignedTo]?.name || t.assignedTo)}</small>
+      </div>
+      <div style="text-align:right;">
+        <span class="priority-tag ${t.priority ? t.priority.toLowerCase() + '-tag' : ''}" style="font-size:11px;">${t.priority}</span>
+        <div style="font-size:12px; color:#64748b; margin-top:4px;">${t.progress || 0}% (${t.status})</div>
+      </div>
+    </div>
+  `).join("");
 }
 
 function renderFocusCard() {
@@ -359,7 +387,6 @@ function renderTaskTable() {
         <td>
           <strong>${t.isPrivate ? "🔒 " : ""}${escapeHtml(t.title)}</strong>
           <small style="display:block;color:#64748b;">${escapeHtml(t.description || "")}</small>
-          ${t.attachmentURL ? `<a href="${t.attachmentURL}" target="_blank" class="attachment-link" style="display:inline-block;margin-top:4px;color:#4f46e5;">📎 ${escapeHtml(t.attachmentName || "View File")}</a>` : ""}
         </td>
         <td>${escapeHtml(userDirectory[t.assignedTo]?.name || t.assignedTo)}</td>
         <td><span class="category-tag">${t.category}</span></td>
@@ -384,7 +411,7 @@ function renderTaskTable() {
 }
 
 // ============================================================
-// 7. ASANA-STYLE CALENDAR
+// 7. CALENDAR VIEW
 // ============================================================
 function renderCalendar() {
   const daysContainer = document.getElementById("calendarDays");
@@ -426,7 +453,6 @@ function renderCalendar() {
 
   let daysHtml = "";
 
-  // 1. Previous month trailing days
   for (let i = firstDay - 1; i >= 0; i--) {
     const prevDate = daysInPrevMonth - i;
     daysHtml += `
@@ -436,7 +462,6 @@ function renderCalendar() {
     `;
   }
 
-  // 2. Current Month active days
   const todayStr = new Date().toISOString().split("T")[0];
 
   for (let d = 1; d <= daysInCurrentMonth; d++) {
@@ -468,7 +493,6 @@ function renderCalendar() {
     `;
   }
 
-  // 3. Next month trailing days
   const totalCells = firstDay + daysInCurrentMonth;
   const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
 
@@ -483,7 +507,6 @@ function renderCalendar() {
   daysContainer.innerHTML = daysHtml;
 }
 
-// Calendar Navigation
 document.getElementById("prevMonthBtn")?.addEventListener("click", () => {
   calendarDate.setMonth(calendarDate.getMonth() - 1);
   renderCalendar();
@@ -532,10 +555,11 @@ document.getElementById("closeModal")?.addEventListener("click", () => {
   if (modal) modal.style.display = "none";
 });
 
+// TASK CREATION HANDLER
 document.getElementById("taskForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const submitBtn = document.getElementById("submitTaskBtn");
-  const originalText = submitBtn ? submitBtn.textContent : "Save";
+  const originalText = submitBtn ? submitBtn.textContent : "Save Task";
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.textContent = "Saving...";
@@ -547,30 +571,11 @@ document.getElementById("taskForm")?.addEventListener("submit", async (e) => {
   const priority = document.getElementById("taskPrioritySelect")?.value || "Medium";
   const deadline = document.getElementById("taskDeadlineInput")?.value || "";
   const category = document.getElementById("taskCategorySelect")?.value || "Academic";
-  const fileInput = document.getElementById("taskFileInput");
-  const file = fileInput?.files?.[0];
 
   const assignedTo = isHod ? (document.getElementById("taskFacultySelect")?.value || currentUser) : currentUser;
   const isPrivate = !isHod;
 
-  let attachmentURL = "";
-  let attachmentName = "";
-
   try {
-    if (file) {
-      if (submitBtn) submitBtn.textContent = "Uploading file...";
-      try {
-        const fileRef = ref(storage, `tasks/${Date.now()}_${file.name}`);
-        const uploadResult = await uploadBytes(fileRef, file);
-        attachmentURL = await getDownloadURL(uploadResult.ref);
-        attachmentName = file.name;
-      } catch (storageError) {
-        console.warn("Storage upload error:", storageError);
-        alert("Warning: Could not upload attachment. Task details saved without file.");
-      }
-    }
-
-    if (submitBtn) submitBtn.textContent = "Creating task...";
     await addDoc(collection(db, "tasks"), {
       title,
       description: desc,
@@ -579,8 +584,6 @@ document.getElementById("taskForm")?.addEventListener("submit", async (e) => {
       priority,
       deadline,
       category,
-      attachmentURL,
-      attachmentName,
       status: "Assigned",
       progress: 0,
       createdAt: serverTimestamp()
@@ -603,11 +606,19 @@ document.getElementById("taskForm")?.addEventListener("submit", async (e) => {
 // MESSAGING SUBMIT HANDLER
 document.getElementById("messageForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
+  const sendBtn = document.getElementById("sendMessageBtn");
+  const originalText = sendBtn ? sendBtn.textContent : "Send Message";
+
   const recipient = document.getElementById("messageRecipient")?.value;
   const textInput = document.getElementById("messageText");
   const text = textInput ? textInput.value.trim() : "";
 
   if (!text) return;
+
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Sending...";
+  }
 
   try {
     await addDoc(collection(db, "messages"), {
@@ -615,73 +626,166 @@ document.getElementById("messageForm")?.addEventListener("submit", async (e) => 
       senderName: userDirectory[currentUser].name,
       recipient,
       text,
+      deletedBy: [], // Array to track individual deletions per user
       createdAt: serverTimestamp()
     });
+
     if (textInput) textInput.value = "";
     showToast("Message transmitted.");
   } catch (err) {
+    console.error("Messaging failure:", err);
     alert("Could not send message: " + err.message);
+  } finally {
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = originalText;
+    }
   }
 });
 
-// WORKLOAD & REPORTS RENDERER
-function renderReports() {
-  if (!userDirectory[currentUser]?.isHOD) return;
-
-  const publicTasks = allTasks.filter(t => !t.isPrivate);
-  const total = publicTasks.length;
-  const completed = publicTasks.filter(t => t.status === "Completed").length;
-  const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-  const rateEl = document.getElementById("reportCompletionRate");
-  const barEl = document.getElementById("reportProgressBar");
-  if (rateEl) rateEl.textContent = `${rate}%`;
-  if (barEl) barEl.style.width = `${rate}%`;
-
-  const barContainer = document.getElementById("facultyWorkloadBars");
-  if (barContainer) {
-    barContainer.innerHTML = Object.keys(userDirectory).map(key => {
-      const staffTasks = publicTasks.filter(t => t.assignedTo === key);
-      const count = staffTasks.length;
-      const completedCount = staffTasks.filter(t => t.status === "Completed").length;
-      return `
-        <div style="margin-bottom:12px;">
-          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
-            <span>${userDirectory[key].name}</span>
-            <span>${completedCount}/${count} Completed</span>
-          </div>
-          <div style="background:#e2e8f0;height:8px;border-radius:4px;overflow:hidden;">
-            <div style="background:#4f46e5;height:100%;width:${count > 0 ? (completedCount/count)*100 : 0}%;"></div>
-          </div>
-        </div>
-      `;
-    }).join("");
+// SINGLE MESSAGE SOFT-DELETE (Deletes only for the current user)
+window._deleteMessage = async (messageId) => {
+  if (!confirm("Delete this message for your account? (Other faculty members will still see it)")) return;
+  try {
+    await updateDoc(doc(db, "messages", messageId), {
+      deletedBy: arrayUnion(currentUser)
+    });
+    showToast("Message removed from your view.");
+  } catch (err) {
+    alert("Delete failed: " + err.message);
   }
-}
+};
 
-// MESSAGING INBOX RENDERER
+// MESSAGING INBOX RENDERER (Filters out messages deleted by currentUser)
 function renderMessages() {
   const container = document.getElementById("messageList");
   if (!container) return;
 
-  const visible = allMessages.filter(m => 
-    m.recipient === "all" || m.recipient === currentUser || m.senderId === currentUser
-  );
+  const visible = allMessages.filter(m => {
+    // 1. Hide if the current user has deleted it from their inbox
+    if (Array.isArray(m.deletedBy) && m.deletedBy.includes(currentUser)) {
+      return false;
+    }
+    // 2. Visible if addressed to all, currentUser, or sent by currentUser
+    return m.recipient === "all" || m.recipient === currentUser || m.senderId === currentUser;
+  });
+
+  const selectAll = document.getElementById("selectAllMessages");
+  if (selectAll) selectAll.checked = false;
 
   if (visible.length === 0) {
-    container.innerHTML = `<p style="padding:15px;color:#64748b;">No messages available.</p>`;
+    container.innerHTML = `<p style="padding:15px;color:#64748b;">No messages in your inbox.</p>`;
     return;
   }
 
   container.innerHTML = visible.map(m => `
-    <div class="message-item">
-      <div class="message-meta">
-        <strong>${escapeHtml(m.senderName)}</strong> → ${m.recipient === "all" ? "All Faculty" : escapeHtml(userDirectory[m.recipient]?.name || m.recipient)}
+    <div class="message-item" style="display: flex; align-items: flex-start; gap: 10px;">
+      <input type="checkbox" class="msg-select-check" value="${m.id}" style="margin-top: 4px; cursor: pointer;">
+      <div style="flex: 1;">
+        <div class="message-meta" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>
+            <strong>${escapeHtml(m.senderName)}</strong> → 
+            ${m.recipient === "all" ? "All Faculty" : escapeHtml(userDirectory[m.recipient]?.name || m.recipient)}
+          </span>
+          <button onclick="window._deleteMessage('${m.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:12px; padding:0;">
+            Delete
+          </button>
+        </div>
+        <div style="font-size: 13px; color: #1e293b; line-height: 1.4;">${escapeHtml(m.text)}</div>
       </div>
-      <div>${escapeHtml(m.text)}</div>
     </div>
   `).join("");
 }
+
+document.getElementById("selectAllMessages")?.addEventListener("change", (e) => {
+  const checkboxes = document.querySelectorAll(".msg-select-check");
+  checkboxes.forEach(cb => cb.checked = e.target.checked);
+});
+
+// BATCH SOFT-DELETE (Deletes only for the current user)
+document.getElementById("deleteSelectedMessagesBtn")?.addEventListener("click", async () => {
+  const selectedBoxes = Array.from(document.querySelectorAll(".msg-select-check:checked"));
+  if (selectedBoxes.length === 0) {
+    alert("Please select at least one message to delete.");
+    return;
+  }
+
+  if (!confirm(`Delete ${selectedBoxes.length} selected message(s) from your view?`)) return;
+
+  try {
+    const updatePromises = selectedBoxes.map(cb => 
+      updateDoc(doc(db, "messages", cb.value), {
+        deletedBy: arrayUnion(currentUser)
+      })
+    );
+    await Promise.all(updatePromises);
+    showToast(`${selectedBoxes.length} message(s) removed.`);
+  } catch (err) {
+    alert("Batch delete failed: " + err.message);
+  }
+});
+
+// ============================================================
+// WORKLOAD & REPORTS RENDERER (STRICTLY ASSIGNED TASKS ONLY)
+// ============================================================
+function renderReports() {
+  if (!userDirectory[currentUser]?.isHOD) return;
+
+  // Filter ONLY official assigned department tasks (strictly exclude private tasks)
+  const assignedTasks = allTasks.filter(t => !t.isPrivate);
+  const total = assignedTasks.length;
+  const completed = assignedTasks.filter(t => t.status === "Completed" || (t.progress || 0) === 100).length;
+  const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  const rateEl = document.getElementById("reportCompletionRate");
+  const barEl = document.getElementById("reportProgressBar");
+  const totalEl = document.getElementById("reportTotalTasks");
+
+  if (rateEl) rateEl.textContent = `${rate}%`;
+  if (barEl) barEl.style.width = `${rate}%`;
+  if (totalEl) totalEl.textContent = total;
+
+  const barContainer = document.getElementById("facultyWorkloadBars");
+  if (!barContainer) return;
+
+  barContainer.innerHTML = Object.keys(userDirectory).map(key => {
+    const faculty = userDirectory[key];
+    const facultyNameLower = faculty.name.toLowerCase();
+
+    // Match assigned tasks for this specific faculty member
+    const facultyTasks = assignedTasks.filter(t => {
+      if (!t.assignedTo) return false;
+      const assigned = String(t.assignedTo).toLowerCase().trim();
+      return assigned === key.toLowerCase() || assigned === facultyNameLower || facultyNameLower.includes(assigned);
+    });
+
+    const count = facultyTasks.length;
+    const completedCount = facultyTasks.filter(t => t.status === "Completed" || (t.progress || 0) === 100).length;
+    const percentage = count > 0 ? Math.round((completedCount / count) * 100) : 0;
+
+    return `
+      <div class="workload-item">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <div>
+            <strong style="font-size: 14px; color: #1e293b;">${faculty.name}</strong>
+            <span style="font-size: 12px; color: #64748b; margin-left: 6px;">(${faculty.role})</span>
+          </div>
+          <span style="font-size: 13px; font-weight: 600; color: ${count > 0 ? '#1d4ed8' : '#94a3b8'};">
+            ${completedCount} / ${count} Completed (${percentage}%)
+          </span>
+        </div>
+        <div style="background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
+          <div style="background: ${percentage === 100 ? '#16a34a' : '#4f46e5'}; height: 100%; width: ${count === 0 ? 0 : Math.max(percentage, 4)}%; transition: width 0.3s ease;"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+document.getElementById("refreshWorkloadBtn")?.addEventListener("click", () => {
+  renderReports();
+  showToast("Workload data refreshed.");
+});
 
 // Global Filter & Navigation Listeners
 document.getElementById("statusFilter")?.addEventListener("change", renderTaskTable);
