@@ -557,7 +557,7 @@ document.getElementById("closeModal")?.addEventListener("click", () => {
   if (modal) modal.style.display = "none";
 });
 
-// TASK CREATION HANDLER
+
 document.getElementById("taskForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const submitBtn = document.getElementById("submitTaskBtn");
@@ -574,24 +574,49 @@ document.getElementById("taskForm")?.addEventListener("submit", async (e) => {
   const deadline = document.getElementById("taskDeadlineInput")?.value || "";
   const category = document.getElementById("taskCategorySelect")?.value || "Academic";
 
-  const assignedTo = isHod ? (document.getElementById("taskFacultySelect")?.value || currentUser) : currentUser;
+  const selectedFaculty = isHod ? (document.getElementById("taskFacultySelect")?.value || currentUser) : currentUser;
   const isPrivate = !isHod;
 
   try {
-    await addDoc(collection(db, "tasks"), {
-      title,
-      description: desc,
-      assignedTo,
-      isPrivate,
-      priority,
-      deadline,
-      category,
-      status: "Assigned",
-      progress: 0,
-      createdAt: serverTimestamp()
-    });
+    if (isHod && selectedFaculty === "all") {
+      // Get all staff keys except 'hod' so every faculty gets their own trackable task
+      const staffKeys = Object.keys(userDirectory).filter(key => !userDirectory[key].isHOD);
 
-    showToast(isPrivate ? "Personal task recorded." : "Task successfully assigned.");
+      const batchPromises = staffKeys.map(facultyKey =>
+        addDoc(collection(db, "tasks"), {
+          title,
+          description: desc,
+          assignedTo: facultyKey,
+          isPrivate: false,
+          priority,
+          deadline,
+          category,
+          status: "Assigned",
+          progress: 0,
+          createdAt: serverTimestamp()
+        })
+      );
+
+      await Promise.all(batchPromises);
+      showToast(`Task assigned to all ${staffKeys.length} faculty members!`);
+    } else {
+      // Single assignment (HOD to specific person/self, or Staff private task)
+      await addDoc(collection(db, "tasks"), {
+        title,
+        description: desc,
+        assignedTo: selectedFaculty,
+        isPrivate,
+        priority,
+        deadline,
+        category,
+        status: "Assigned",
+        progress: 0,
+        createdAt: serverTimestamp()
+      });
+
+      showToast(isPrivate ? "Personal task recorded." : "Task successfully assigned.");
+    }
+
     document.getElementById("taskForm").reset();
     const modal = document.getElementById("taskModal");
     if (modal) modal.style.display = "none";
@@ -604,7 +629,6 @@ document.getElementById("taskForm")?.addEventListener("submit", async (e) => {
     }
   }
 });
-
 // MESSAGING SUBMIT HANDLER
 document.getElementById("messageForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
