@@ -109,9 +109,11 @@ function populateRecipients() {
 function populateFacultySelect() {
   const select = document.getElementById("taskFacultySelect");
   if (!select) return;
-  select.innerHTML = Object.keys(userDirectory)
-    .map(k => `<option value="${k}">${userDirectory[k].name}</option>`)
-    .join("");
+
+  select.innerHTML = `<option value="all">📢 All Faculty (Entire Department)</option>` +
+    Object.keys(userDirectory)
+      .map(k => `<option value="${k}">${userDirectory[k].name}</option>`)
+      .join("");
 }
 
 // ============================================================
